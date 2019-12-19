@@ -18,5 +18,6 @@
     <orderEntry type="library" name="sbt: org.typelevel:cats-kernel_2.12:1.4.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.typelevel:cats-core_2.12:1.4.0:jar" level="project" />
     <orderEntry type="library" name="sbt: org.scala-lang:scala-reflect:2.12.7:jar" level="project" />
+    <orderEntry type="library" name="scala-sdk" level="application" />
   </component>
 </module>
