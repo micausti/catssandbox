@@ -5,7 +5,112 @@ package sandbox
 
 object Main extends App {
 
+
+  //Pre-cats, notes from Typeclass chapter of Essential Scala
+  //When looking for type class instances (implicit values), the compiler will look in
+  //the local scope AND
+  //the companion objects of types involved in the method call
+  //**important note = implicits in the local scope take precedence
+
+  final case class Rational(numerator: Int, denominator: Int)
+
+  object Rational {
+    implicit val ordering = Ordering.fromLessThan[Rational]((x, y) =>
+      (x.numerator.toDouble / x.denominator.toDouble) <
+        (y.numerator.toDouble / y.denominator.toDouble)
+    )
+  }
+  object Example {
+    def example() = {
+      assert(List(Rational(1, 2), Rational(3,4), Rational(1, 3)).sorted ==
+        List(Rational(1, 3), Rational(1, 2), Rational(3, 4)))
+    }
+
+  }
+
+  //1. When defining a type class instance, if there is a single instance for the type
+  //And you can edit the code for the type you are defining the instance for,
+  //Then define the type class instance in the companion object of the type
+
+  //2. Local scope takes precedence over instances found in companion objects
+  //When defining a type class instance, if there is a single good default instance for the type
+  //and you can edit the code for the type you are defining the instance for, then
+  //define the type class instance in the companion object of the type - this allows
+  //users to override the instance by defining one in the local scope while still providing
+  //sensible default behavior
+
+  //3. If there is no good default instance (or multiple defaults) for a type class instance,
+  //we should not place type class instances in the companion object, but rather
+  //require the user to explicitly import an instance into the local scope
+  //one simple way is to place each in its own object that the user can import into the local scope
+
+  //7.2.5.1 Exercise
+  final case class Order(units: Int, unitPrice: Double) {
+    val totalPrice: Double = units * unitPrice
+  }
+
+  object TotalPriceOrdering {
+    implicit val ordering = Ordering.fromLessThan[Order]((x, y) =>
+    x.totalPrice < y.totalPrice)
+  }
+  object UnitOrdering{
+    implicit val ordering = Ordering.fromLessThan[Order]((x, y) =>
+      x.units < y.units)
+  }
+  object unitPriceOrdering{
+    implicit val ordering = Ordering.fromLessThan[Order]((x, y) =>
+    x.unitPrice < y.unitPrice)
+  }
+
+//Creating Type classes - 4 components
+  //1. The actual type class itself - trait with at least one type variable
+    //which specify the concrete types the type class instances are defined for
+  //2. The type class instances - instance of the trait for each concrete class we want to use
+    //and different situation we want to use it in
+  //3. Interfaces using implicit params
+  //4. Interfacces using enrichment and implicit params
+
+  //Exercise 7.3.4.1
+
+  //Equal is a type class
+  trait Equal[A] {
+    def equal(x:A, y: A): Boolean
+  }
+
+  case class Person2(name: String, email: String)
+
+  //type class instances
+  object EqualbyEmail extends Equal[Person]{
+    def equal(x:Person, y:Person): Boolean =
+      x.email == y.email
+  }
+
+  object EqualByNameAndEmail extends Equal[Person]{
+    def equal(x:Person, y:Person): Boolean =
+      (x.email == y.email) && (x.name == y.name)
+  }
+
+  //7.4 Implicit Parameter and Interfaces
+trait HtmlWriter[A]{
+    def write(in:A): String
+  }
+
+object PersonWriter extends HtmlWriter[Person] {
+  def write(person: Person) = s"<span>${person.name} &lt;${person.email}&gt;</span>"
+}
+
+  //implicit parameter list
+  object HtmlUtil {
+    def htmlify[A](data: A)(implicit writer: HtmlWriter[A]): String = {
+      writer.write(data)
+    }
+  }
+
+
   //println("Hello World")
+
+
+  //CATS STARTS HERE*****
 
 
   //1.1 Anatomy of a Type Class
@@ -274,5 +379,6 @@ object Main extends App {
   //default semantics for Scala type constructors
 //When the compiler searches for an implicit, it looks for one matching the type of subtype -
 //This allows us to use variance annotations to control type class instance selection
+
 
 
